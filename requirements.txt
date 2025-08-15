@@ -1,5 +1,5 @@
 streamlit
 pandas
 plotly
-streamlit-gsheets
+git+https://github.com/streamlit/gsheets-connection
 python-dateutil
