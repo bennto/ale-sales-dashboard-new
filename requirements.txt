@@ -1,1 +1,8 @@
+os
+json
 streamlit
+pandas
+plotly
+openpyxl
+gspread
+google-auth
