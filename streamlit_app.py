@@ -25,8 +25,8 @@ t1, t2 = st.columns((0.2,1),vertical_alignment='center')
 t1.image('images/logo.png', width=160)
 t2.title("Alienware Longhorn Esports (ALE) Sales Dashboard")
 
-aledata_df["date"] = pd.to_datetime(aledata_df["Date"])
-min_date = aledata_df["date"].min()
+aledata_df["Date"] = pd.to_datetime(aledata_df["Date"])
+min_date = aledata_df["Date"].min()
 
 # FILTERS
 
@@ -73,7 +73,7 @@ if itemname:
 
 # HERO STATISTICS
 
-h1, h2, h3 = st.columns((0.4,1,1),vertical_alignment='center')
+h1, h2, h3 = st.columns((0.25,1,0.4),vertical_alignment='center')
 
 total_rev = aledata_df['Revenue'].sum()
 scope_rev = showdata_df['Revenue'].sum()
@@ -103,12 +103,13 @@ elif total_rev == scope_rev:
 monthly_data = showdata_df.groupby("YearMonth")["Revenue"].sum().reset_index()
 monthly_data["YearMonth"] = monthly_data["YearMonth"].astype(str)  # convert to string for Plotly
 
-fig = px.bar(
+fig = px.line(
     monthly_data, 
     x="YearMonth", 
     y="Revenue",
     labels={"YearMonth": "Month", "Revenue": "Total Revenue"},
     title="Revenue per Month (General & Reservations)",
+    markers=True,
     template="plotly_white"
 )
 fig.update_layout(
@@ -118,6 +119,18 @@ fig.update_layout(
     )
 )
 h2.plotly_chart(fig,use_container_width=True)
+
+reservation_rev = showdata_df[showdata_df['Reservation'] == True]['Revenue'].sum()
+general_rev = showdata_df[showdata_df['Reservation'] == False]['Revenue'].sum()
+rev_pie = {'Type': ['Total', 'General', 'Reservation'], 'Amount': [scope_rev,general_rev,reservation_rev]}
+rev_pie_df = pd.DataFrame(data=rev_pie)
+fig = px.pie(rev_pie_df, values='Amount', names='Type', title='Revenue Breakdown (General vs. Reservations)')
+fig.update_traces(textposition='inside', textinfo='value+label', texttemplate="%{label}<br>$%{value}")
+fig.update(layout_showlegend=False)
+h3.plotly_chart(fig,use_container_width=True)
+
+p1, p2= st.columns((1,1),vertical_alignment='center')
+
 
 # Trim reservations from df
 nores_df = showdata_df[showdata_df['Reservation'] != True]
@@ -157,4 +170,37 @@ fig.update_layout(
     )
 )
 
-h3.plotly_chart(fig, use_container_width=True)
+p1.plotly_chart(fig, use_container_width=True)
+
+showdata_df['Weekday'] = showdata_df['Date'].dt.day_name()
+weekday_rev = showdata_df.groupby("Weekday", as_index=False)['Revenue'].sum()
+
+weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+# Make Weekday column categorical with ordered categories
+weekday_rev['Weekday'] = pd.Categorical(
+    weekday_rev['Weekday'], 
+    categories=weekday_order, 
+    ordered=True
+)
+
+# Sort by that order
+weekday_rev = weekday_rev.sort_values('Weekday')
+
+fig = px.bar(
+    weekday_rev,
+    x='Weekday',
+    y='Revenue',
+    labels={"Weekday": "Day of Week", "Revenue": "Total Revenue"},
+    title="Revenue by Day of Week",
+    template="plotly_white"
+)
+
+fig.update_layout(
+    yaxis=dict(
+        tickprefix='$',
+        tickformat=',.2f'
+    )
+)
+
+p2.plotly_chart(fig,use_container_width=True)
