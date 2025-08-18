@@ -34,12 +34,14 @@ min_date = aledata_df["Date"].min()
 
 def reset_filters():
     st.session_state.product_selection = []
+    st.session_state.type_selection = []
     st.session_state.start_date = min_date
     st.session_state.end_date = datetime.today()
 
 with st.sidebar:
     st.header('Dashboard Filters')
     itemname = st.multiselect('Filter by Product',aleitems_df,default=None,key='product_selection')
+    itemtype = st.selectbox('Filter by Reservations',("General","Reservations","All"),index=2,key='type_selection')
     startdate = st.date_input('Start Date',value=min_date,key='start_date',format="MM/DD/YYYY",help="Earliest transaction: 8/21/2023")
     enddate = st.date_input('End Date',key='end_date',format="MM/DD/YYYY")
     st.button("Reset Filters",type="primary",on_click=reset_filters,use_container_width=True)
@@ -63,6 +65,11 @@ showdata_df = aledata_df[
 ]
 if itemname:
     showdata_df=showdata_df[showdata_df["Product Name"].isin(itemname)]
+if itemtype == 'General':
+    showdata_df=showdata_df[showdata_df["Reservation"] == False]
+elif itemtype == 'Reservations':
+    showdata_df=showdata_df[showdata_df["Reservation"] == True]
+
 
 ## TEMP FILTER OUTPUTS
 
