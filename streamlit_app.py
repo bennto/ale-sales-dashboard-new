@@ -34,7 +34,7 @@ min_date = aledata_df["Date"].min()
 
 def reset_filters():
     st.session_state.product_selection = []
-    st.session_state.type_selection = []
+    st.session_state.type_selection = "All"
     st.session_state.start_date = min_date
     st.session_state.end_date = datetime.today()
 
