@@ -140,15 +140,14 @@ p1, p2= st.columns((1,1),vertical_alignment='center')
 
 
 # Trim reservations from df
-nores_df = showdata_df[showdata_df['Reservation'] != True]
 # Convert Time to datetime
-nores_df['Time'] = pd.to_datetime(nores_df['Time'].astype(str))
+showdata_df['Time'] = pd.to_datetime(showdata_df['Time'].astype(str))
 
 # Create Hour column in AM/PM format
-nores_df['Hour'] = nores_df['Time'].dt.strftime('%I %p')  # e.g., "09 AM"
+showdata_df['Hour'] = showdata_df['Time'].dt.strftime('%I %p')  # e.g., "09 AM"
 
 # Group by Hour and sum Revenue
-hourly_data = nores_df.groupby('Hour')['Revenue'].sum().reset_index()
+hourly_data = showdata_df.groupby('Hour')['Revenue'].sum().reset_index()
 
 # Keep only the range from first non-zero to last non-zero
 nonzero_indices = hourly_data[hourly_data['Revenue'] != 0].index
