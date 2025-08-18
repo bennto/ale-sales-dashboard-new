@@ -73,7 +73,7 @@ if itemname:
 
 # HERO STATISTICS
 
-h1, h2 = st.columns((0.4,1),vertical_alignment='center')
+h1, h2, h3 = st.columns((0.4,1,1),vertical_alignment='center')
 
 total_rev = aledata_df['Revenue'].sum()
 scope_rev = showdata_df['Revenue'].sum()
@@ -108,7 +108,8 @@ fig = px.bar(
     x="YearMonth", 
     y="Revenue",
     labels={"YearMonth": "Month", "Revenue": "Total Revenue"},
-    template="seaborn"
+    title="Revenue per Month (General & Reservations)",
+    template="plotly_white"
 )
 fig.update_layout(
     yaxis=dict(
@@ -118,3 +119,42 @@ fig.update_layout(
 )
 h2.plotly_chart(fig,use_container_width=True)
 
+# Trim reservations from df
+nores_df = showdata_df[showdata_df['Reservation'] != True]
+# Convert Time to datetime
+nores_df['Time'] = pd.to_datetime(nores_df['Time'].astype(str))
+
+# Create Hour column in AM/PM format
+nores_df['Hour'] = nores_df['Time'].dt.strftime('%I %p')  # e.g., "09 AM"
+
+# Group by Hour and sum Revenue
+hourly_data = nores_df.groupby('Hour')['Revenue'].sum().reset_index()
+
+# Keep only the range from first non-zero to last non-zero
+nonzero_indices = hourly_data[hourly_data['Revenue'] != 0].index
+if len(nonzero_indices) > 0:
+    hourly_data = hourly_data.loc[nonzero_indices[0] : nonzero_indices[-1]]
+
+# Sort hours chronologically
+hourly_data['Hour_dt'] = pd.to_datetime(hourly_data['Hour'], format='%I %p')
+hourly_data = hourly_data.sort_values('Hour_dt')
+hourly_data = hourly_data.drop(columns='Hour_dt')
+
+# Plot
+fig = px.bar(
+    hourly_data,
+    x='Hour',
+    y='Revenue',
+    labels={"Hour": "Hour of Day", "Revenue": "Total Revenue"},
+    title="Revenue by Hour (General Sales Only)",
+    template="plotly_white"
+)
+
+fig.update_layout(
+    yaxis=dict(
+        tickprefix='$',
+        tickformat=',.2f'
+    )
+)
+
+h3.plotly_chart(fig, use_container_width=True)
